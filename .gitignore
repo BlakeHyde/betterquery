@@ -1,0 +1,17 @@
+# Rust build output (at any workspace or crate level)
+target/
+
+# Rust profiling and coverage output
+*.profraw
+*.profdata
+
+# Editor temporary files
+*.swp
+*.swo
+*~
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Cargo.lock is intentionally tracked for reproducible workspace builds.

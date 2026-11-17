@@ -1,0 +1,10 @@
+[package]
+name = "bp-parser"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+bp-json = { path = "../json" }
+serde_json = "1"
+serde_json_path = "0.7.2"
