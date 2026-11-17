@@ -1,0 +1,56 @@
+There is a PATCH form that applies JSON Patch RFC 6902 to the document
+as a whole. A top level series of these is equivalent to a RFC-6902
+document.
+
+(patch replace
+    (path "/FirstName")
+    (value "Jane"))
+
+The six RFC 6902 operation names are represented in the second position
+as case-insensitive bare-words: ADD, REMOVE, REPLACE, MOVE, COPY, TEST.
+
+Similarly, a MERGE form exists that applies JSON Merge Patch (RFC 7396)
+semantics.
+
+(merge (object
+    (title . "Hello!")
+    (phoneNumber . "+01-123-456-7890")
+    (author . (object (familyName . NULL)))
+    (tags . (array "example"))))
+
+For convenience, an escape form that accepts exactly one JSON value
+between JSON ... END delimiters is accepted. Note that this can be
+applied in any VALUE position for either JSON Patch or JSON Merge Patch
+operations.
+
+(merge (JSON
+    {
+        "title": "Hello!",
+        "phoneNumber": "+01-123-456-7890",
+        "author": {
+            "familyName": null
+        },
+        "tags": [ "example" ]
+    }
+END))
+
+Last, a QUERY form is provided that allows the specification of JSON
+Path queries (RFC 9535) and the application of either JSON Patch or JSON
+Merge Patch operations to the results:
+
+(query "$..[?(@.sharedKey == true)]"
+    (patch remove (path "/sharedKey")))
+
+Queries can be nested within query forms, but never within merge or
+patch forms. In other words, (query ... (query ... (merge ...))) would
+be valid forms but (query ... (merge ... (query ...))) would not be.
+
+Within each nested query form, `$` refers to the currently selected
+subtree.
+
+Each query accepts exactly one body form: a patch, a merge, or nested
+query.
+
+There are two value-construction forms, ARRAY and OBJECT, that allow the
+specification of JSON values of those types. There is also a global
+constant NULL that represents JSON null.

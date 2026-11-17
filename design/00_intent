@@ -1,0 +1,188 @@
+This project will introduce a new hybrid query language for arbitrary
+"map-like" data structures: JSON primarily, but also the JSON-compatible
+subset of YAML.
+
+It will apply several standards:
+
+- JSON Patch (RFC 6902)
+- JSON Merge Patch (RFC 7396)
+- JSON Path (RFC 9535)
+
+The mechanism for doing so is a s-expression based format that specifies
+an operation over the document.
+
+
+JSON PATCH
+
+This is the most direct application of a standard:
+
+(patch replace
+    (path "/FirstName")
+    (value "Jane"))
+
+(patch remove
+    (path "/Email"))
+
+(patch add
+    (path "/Address/ZipCode")
+    (value "90210"))
+
+
+JSON MERGE
+
+Original document:
+
+{
+  "title": "Goodbye!",
+  "author": {
+    "givenName": "John",
+    "familyName": "Doe"
+  },
+  "tags": [ "example", "sample" ],
+  "content": "This will be unchanged"
+}
+
+Patch content:
+
+{
+  "title": "Hello!",
+  "phoneNumber": "+01-123-456-7890",
+  "author": {
+    "familyName": null
+  },
+  "tags": [ "example" ]
+}
+
+Result:
+
+{
+  "title": "Hello!",
+  "phoneNumber": "+01-123-456-7890",
+  "author": {
+    "givenName": "John"
+  },
+  "tags": [ "example" ],
+  "content": "This will be unchanged"
+}
+
+In our language, this operation would be presented in s-expressions:
+
+(merge (object
+    (title . "Hello!")
+    (phoneNumber . "+01-123-456-7890")
+    (author . (object (familyName . NULL)))
+    (tags . (array "example"))))
+
+Or as a JSON "here document" that's parsed and semantically preserved
+but not byte-identical:
+
+(merge (JSON
+    {
+        "title": "Hello!",
+        "phoneNumber": "+01-123-456-7890",
+        "author": {
+            "familyName": null
+        },
+        "tags": [ "example" ]
+    }
+END))
+
+Note that the here document doesn't enable fence definition; it's always
+JSON and END because it's definitionally unambiguous: everything between
+them must be a single valid JSON value or will be rejected.
+
+For similar reasons, indentation is not significant. JSON 42 END is a
+perfectly valid "document."
+
+
+JSON PATH
+
+JSON Path is not a patch format, but instead a query language. As such,
+it can be used in many cases where the JSON Patch and Merge Patch
+formats leave something to be desired. It serves as a way to provide
+multiple targets for a transformation:
+
+{
+    "a": {
+        "sharedKey": true,
+        "uniqueA": 1
+    },
+    "b": {
+        "sharedKey": true,
+        "uniqueB": 2
+    },
+    "c": {
+        "sharedKey": false
+    }
+}
+
+This query would identify and remove sharedKey values where they are
+true:
+
+(query "$..[?(@.sharedKey == true)]"
+    (patch remove (path "/sharedKey")))
+
+This results in:
+
+{
+    "a": {
+        "uniqueA": 1
+    },
+    "b": {
+        "uniqueB": 2
+    },
+    "c": {
+        "sharedKey": false
+    }
+}
+
+Similarly, it could be used with merge:
+
+(query "$..[?(@.sharedKey == true)]"
+    (merge (object (answer . 42))))
+
+{
+    "a": {
+        "sharedKey": true,
+        "uniqueA": 1,
+        "answer": 42
+    },
+    "b": {
+        "sharedKey": true,
+        "uniqueB": 2,
+        "answer": 42
+    },
+    "c": {
+        "sharedKey": false
+    }
+}
+
+Because JSONPath can produce duplicate nodes, it is normalized to paths
+(e.g. /a and /b with this query) and de-duplicated before the
+application of merges and patches.
+
+Similarly, transformations are all-or-nothing: if nine succeed and one
+fails, then the entire application fails. The intent of this format is
+to be declarative and atomic.
+
+Transforms are applied in the order that they occur and operate on the
+document produced by the previous form. This can produce surprising
+output in some cases.
+
+To minimize surprises, nodes are totally ordered: at each step in a
+
+1. Depth-first
+2. Parent-before-children ordering
+3. Keys ordered by their position within the input document
+4. Later-added keys are ordered by their input order
+
+fashion. JSONPath queries are ordered by this total ordering and are
+fixed before mutation within one query form.
+
+To avoid a common foot-gun, locations within one query form remain
+fixed. For example, editing the array ["a", "b", "c", "d", "e"] to
+remove indices 1 and 3 always removes the entries for "b" and "d".
+
+Invalid targets are always errors, and an error message is presented
+showing the transformation where the target was last valid for debugging
+purposes.

@@ -1,0 +1,143 @@
+(* BetterQuery grammar
+ *
+ * Notation: ISO-style EBNF. Commas concatenate; | separates alternatives;
+ * [...] is optional; {...} repeats zero or more times; ?...? describes a
+ * lexical class or a condition not expressible directly in EBNF.
+ *
+ * Lexical conventions for the s-expression language:
+ * - Whitespace may occur between tokens and is otherwise insignificant.
+ * - Whitespace is required between adjacent word/number tokens so that
+ *   they cannot be read as a single token.
+ * - Tokens are consumed in full; a keyword cannot match a word prefix.
+ * - Form names, field names, operation names, and TRUE/FALSE/NULL are
+ *   ASCII case-insensitive. Object keys and string contents preserve case.
+ * - Parentheses, the object-pair dot, and quotes are literal punctuation.
+ * - No quoting operator, comments, or general expression evaluation is
+ *   defined. Bare words are accepted only as keywords or object keys.
+ * - Strings and numbers use the JSON lexical syntax below.
+ *
+ * Embedded JSON is a separate lexical mode: parse exactly one JSON value,
+ * then require END. END is recognized only after that value is complete,
+ * never inside a JSON string. JSON literals are strictly lowercase and
+ * JSON whitespace is explicitly specified in the JSON productions below.
+ *)
+
+program = { form } ;
+
+form = patch | merge | query ;
+
+(* Every query has exactly one body form. There is no PATCHES form. *)
+query = "(", "QUERY", string, form, ")" ;
+
+merge = "(", "MERGE", value, ")" ;
+
+patch = add-patch
+      | remove-patch
+      | replace-patch
+      | move-patch
+      | copy-patch
+      | test-patch ;
+
+add-patch = "(", "PATCH", "ADD", path-and-value, ")" ;
+remove-patch = "(", "PATCH", "REMOVE", path-field, ")" ;
+replace-patch = "(", "PATCH", "REPLACE", path-and-value, ")" ;
+move-patch = "(", "PATCH", "MOVE", path-and-from, ")" ;
+copy-patch = "(", "PATCH", "COPY", path-and-from, ")" ;
+test-patch = "(", "PATCH", "TEST", path-and-value, ")" ;
+
+path-and-value = path-field, value-field | value-field, path-field ;
+path-and-from = path-field, from-field | from-field, path-field ;
+
+path-field = "(", "PATH", string, ")" ;
+from-field = "(", "FROM", string, ")" ;
+value-field = "(", "VALUE", value, ")" ;
+
+(* Values are data, not executable forms. QUERY, PATCH, and MERGE cannot
+ * occur in a value position. Embedded JSON is allowed at every value
+ * position, including array elements and object-member values.
+ *)
+value = string | number | boolean | null
+      | array | object | embedded-json ;
+
+boolean = "TRUE" | "FALSE" ;
+null = "NULL" ;
+
+array = "(", "ARRAY", { value }, ")" ;
+object = "(", "OBJECT", { member }, ")" ;
+member = "(", key, ".", value, ")" ;
+key = string | bare-key ;
+
+(* Quote keys outside this spelling, including empty keys and keys with
+ * spaces or punctuation. A bare key is literal text, not a variable or
+ * keyword: (NULL . 1) has the string key "NULL".
+ *)
+bare-key = key-initial, { key-continuation } ;
+key-initial = ascii-letter | "_" ;
+key-continuation = key-initial | digit | "-" ;
+ascii-letter = ? U+0041..U+005A or U+0061..U+007A ? ;
+
+embedded-json = "(", "JSON", json-text, "END", ")" ;
+
+(* Strict JSON syntax. Whitespace is not implicitly skipped inside the
+ * lexical productions for strings, numbers, or JSON literal tokens.
+ *)
+json-text = json-whitespace, json-value, json-whitespace ;
+json-value = json-object | json-array | string | number
+           | json-true | json-false | json-null ;
+
+json-true = "true" ;
+json-false = "false" ;
+json-null = "null" ;
+
+json-object = "{", json-whitespace,
+              [ json-member,
+                { json-whitespace, ",", json-whitespace, json-member } ],
+              json-whitespace, "}" ;
+json-member = string, json-whitespace, ":", json-whitespace, json-value ;
+
+json-array = "[", json-whitespace,
+             [ json-value,
+               { json-whitespace, ",", json-whitespace, json-value } ],
+             json-whitespace, "]" ;
+
+json-whitespace = { whitespace-character } ;
+whitespace-character = ? U+0020 SPACE, U+0009 TAB,
+                          U+000A LINE FEED, or U+000D CARRIAGE RETURN ? ;
+
+(* The same string and number syntax applies in both lexical modes.
+ * Double quotes delimit strings. Raw control characters are forbidden.
+ *)
+string = '"', { string-character | escape }, '"' ;
+string-character = ? any Unicode character except U+0000..U+001F,
+                     U+0022 DOUBLE QUOTE, and U+005C REVERSE SOLIDUS ? ;
+escape = '\', ( '"' | '\' | '/' | 'b' | 'f' | 'n' | 'r' | 't'
+                 | 'u', hex-digit, hex-digit, hex-digit, hex-digit ) ;
+hex-digit = digit | "a" | "b" | "c" | "d" | "e" | "f"
+                  | "A" | "B" | "C" | "D" | "E" | "F" ;
+
+number = [ "-" ], integer, [ fraction ], [ exponent ] ;
+integer = "0" | nonzero-digit, { digit } ;
+fraction = ".", digit, { digit } ;
+exponent = ( "e" | "E" ), [ "+" | "-" ], digit, { digit } ;
+digit = "0" | nonzero-digit ;
+nonzero-digit = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+(* Semantic constraints (not context-free syntax):
+ *
+ * - Decoded PATH and FROM strings must be RFC 6901 JSON Pointers. The
+ *   empty string denotes the current root. RFC 6902 defines operation-
+ *   specific existence, array-index, append ("-"), and move constraints.
+ * - Decoded QUERY strings must conform to RFC 9535. Within a nested query,
+ *   $ denotes the currently selected subtree. Patch pointers are relative
+ *   to the selected subtree when executed within a query.
+ * - MERGE accepts any JSON value and follows RFC 7396, including whole-
+ *   target replacement by a non-object patch.
+ * - Ordering, target de-duplication, snapshot selection, stable selected
+ *   locations, atomicity, and invalid-target errors follow design/00_intent.
+ *   Ordinary sequential patch forms resolve pointers against the result
+ *   of the preceding form; frozen query locations do not freeze indices
+ *   across separate top-level patch forms.
+ * - Object-member ordering is retained for the language's traversal rules.
+ *   Duplicate-key policy, numeric precision/range, and treatment of
+ *   unpaired Unicode surrogate escapes require separate semantic rules.
+ *)
