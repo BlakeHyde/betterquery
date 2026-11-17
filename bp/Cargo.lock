@@ -42,6 +42,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "bp-json-merge-patch"
+version = "0.1.0"
+dependencies = [
+ "bp-common",
+ "bp-document-parser",
+ "bp-parser",
+]
+
+[[package]]
+name = "bp-json-patch"
+version = "0.1.0"
+dependencies = [
+ "bp-common",
+ "bp-document-parser",
+ "bp-parser",
+]
+
+[[package]]
 name = "bp-parser"
 version = "0.1.0"
 dependencies = [
