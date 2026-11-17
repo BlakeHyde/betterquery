@@ -26,10 +26,11 @@ nix run
 `nix develop` provides Cargo, rustfmt, Clippy, and rust-analyzer.
 `nix build` builds the workspace, runs its tests, and installs `bp-web`.
 `nix run` starts the explorer at <http://127.0.0.1:3000>.
-Pass explorer arguments after `--`:
+The first argument to `nix run` is the flake, so pass explorer arguments
+after an explicit `.`:
 
 ```sh
-nix run -- --listen 127.0.0.1:8080
+nix run . -- --listen 127.0.0.1:8080
 ```
 
 Inside the development shell, run the workspace commands in
