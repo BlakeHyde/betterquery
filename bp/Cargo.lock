@@ -12,16 +12,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "autocfg"
+version = "1.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
+
+[[package]]
+name = "bp-common"
+version = "0.1.0"
+dependencies = [
+ "num-bigint",
+ "serde_json",
+]
+
+[[package]]
+name = "bp-document-parser"
+version = "0.1.0"
+dependencies = [
+ "bp-common",
+ "serde_json",
+]
+
+[[package]]
 name = "bp-json"
 version = "0.1.0"
 dependencies = [
- "serde_json",
+ "bp-common",
+ "bp-document-parser",
 ]
 
 [[package]]
 name = "bp-parser"
 version = "0.1.0"
 dependencies = [
+ "bp-common",
  "bp-json",
  "serde_json",
  "serde_json_path",
@@ -62,6 +86,34 @@ checksum = "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a"
 dependencies = [
  "memchr",
  "minimal-lexical",
+]
+
+[[package]]
+name = "num-bigint"
+version = "0.4.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c89e69e7e0f03bea5ef08013795c25018e101932225a656383bd384495ecc367"
+dependencies = [
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
+name = "num-integer"
+version = "0.1.47"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ce2d95d4b3734dc35aa2f45e1aa22cd416814592a4f9d9205e11affd5b8e10b"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
+name = "num-traits"
+version = "0.2.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
+dependencies = [
+ "autocfg",
 ]
 
 [[package]]

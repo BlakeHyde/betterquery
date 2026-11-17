@@ -5,6 +5,9 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-bp-json = { path = "../json" }
+bp-common = { path = "../common" }
 serde_json = "1"
 serde_json_path = "0.7.2"
+
+[dev-dependencies]
+bp-json = { path = "../json" }

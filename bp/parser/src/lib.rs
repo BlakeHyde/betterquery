@@ -4,37 +4,9 @@
 //! Objects retain source order, numbers retain their exact JSON spelling, and
 //! duplicate decoded keys and invalid Unicode escapes are rejected in both modes.
 
-use std::{collections::HashSet, fmt, ops::Range};
+use std::{collections::HashSet, fmt};
 
-/// A complete sequence of transformations, in execution order.
-pub type Program = Vec<Form>;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Form {
-    /// Byte range in the original UTF-8 source, including parentheses.
-    pub span: Range<usize>,
-    pub kind: FormKind,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum FormKind {
-    Patch(Patch),
-    Merge(Value),
-    Query { query: String, body: Box<Form> },
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Patch {
-    Add { path: String, value: Value },
-    Remove { path: String },
-    Replace { path: String, value: Value },
-    Move { path: String, from: String },
-    Copy { path: String, from: String },
-    Test { path: String, value: Value },
-}
-
-/// Shared ordered JSON intermediate representation.
-pub use bp_json::Value;
+pub use bp_common::{Form, FormKind, Patch, Program, Value};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Error {

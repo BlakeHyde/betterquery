@@ -1,5 +1,5 @@
 [workspace]
-members = ["json", "parser"]
+members = ["common", "document_parser", "json", "parser"]
 resolver = "2"
 
 [workspace.package]
