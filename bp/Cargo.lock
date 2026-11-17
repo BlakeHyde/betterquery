@@ -60,6 +60,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "bp-json-path"
+version = "0.1.0"
+dependencies = [
+ "bp-common",
+ "bp-document-parser",
+ "regex",
+ "serde_json",
+ "serde_json_path",
+]
+
+[[package]]
 name = "bp-parser"
 version = "0.1.0"
 dependencies = [

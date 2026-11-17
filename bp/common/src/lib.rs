@@ -325,6 +325,47 @@ fn decimal(text: &str) -> (bool, String, num_bigint::BigInt) {
     (negative, digits, exponent)
 }
 
+/// Compare valid JSON numbers exactly, without expanding their exponents.
+pub fn compare_numbers(left: &str, right: &str) -> std::cmp::Ordering {
+    use std::cmp::Ordering;
+    let (an, a, ae) = decimal(left);
+    let (bn, b, be) = decimal(right);
+    if a == "0" && b == "0" {
+        return Ordering::Equal;
+    }
+    if a == "0" {
+        return if bn {
+            Ordering::Greater
+        } else {
+            Ordering::Less
+        };
+    }
+    if b == "0" {
+        return if an {
+            Ordering::Less
+        } else {
+            Ordering::Greater
+        };
+    }
+    if an != bn {
+        return if an {
+            Ordering::Less
+        } else {
+            Ordering::Greater
+        };
+    }
+    let order = (ae + num_bigint::BigInt::from(a.len()))
+        .cmp(&(be + num_bigint::BigInt::from(b.len())))
+        .then_with(|| {
+            let length = a.len().max(b.len());
+            a.bytes()
+                .chain(std::iter::repeat(b'0'))
+                .take(length)
+                .cmp(b.bytes().chain(std::iter::repeat(b'0')).take(length))
+        });
+    if an { order.reverse() } else { order }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
