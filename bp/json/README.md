@@ -1,6 +1,8 @@
 # bp-json
 
-Ordered JSON parsing and serialization for BetterQuery. The `bp-parser` crate
+Compatibility exports for ordered JSON parsing and serialization in BetterQuery.
+The implementation lives in `bp-document-parser`; the shared `Value` lives in
+`bp-common`. The `bp-parser` crate
 re-exports the same `Value` type, so language values and JSON documents can be
 used interchangeably without conversion or numeric precision loss.
 
