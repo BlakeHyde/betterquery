@@ -1,0 +1,26 @@
+The project is structured as a cargo workspace under /bp with several
+interrelated crates.
+
+'common' includes shared types and intermediate representations.
+
+'parser' parses the bp language to its intermediate representation.
+
+'document_parser' parses a JSON document to its intermediate
+representation.
+
+'json_patch' contains the application of JSON Patch operations to a
+parsed JSON document.
+
+'json_merge_patch' contains the application of JSON Merge Patch
+operations to a parsed JSON document.
+
+'json_path' contains the application of JSON Path queries to a document
+(and the production of documents as a result).
+
+'timeline' includes the generation of a series of events based on the
+parsed programs, allowing the display of matches, the tree of documents
+produced by the 'json_path' operation (if any), and the result of the
+application of a given merge or patch.
+
+'web' contains a server-side rendered exploration of a given program
+applied to a given document, visualizing the timeline.
