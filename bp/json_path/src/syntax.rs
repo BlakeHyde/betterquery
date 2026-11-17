@@ -32,6 +32,7 @@ pub(super) enum Expr {
 type Result<T> = std::result::Result<T, String>;
 
 pub(super) fn parse(source: &str) -> Result<Query> {
+    budget(source)?;
     serde_json_path::JsonPath::parse(source).map_err(|e| format!("invalid JSONPath: {e}"))?;
     let mut parser = Parser {
         source,
@@ -280,4 +281,37 @@ impl Parser<'_> {
             }
         }
     }
+}
+
+// Bound recursion before invoking the syntax/type validator.
+fn budget(source: &str) -> Result<()> {
+    if source.len() > 65536 {
+        return Err("JSONPath exceeds 64 KiB".into());
+    }
+    let (mut depth, mut operators) = (0usize, 0usize);
+    let mut quote = None;
+    let mut escaped = false;
+    for ch in source.chars() {
+        if let Some(delimiter) = quote {
+            if escaped {
+                escaped = false;
+            } else if ch == '\\' {
+                escaped = true;
+            } else if ch == delimiter {
+                quote = None;
+            }
+        } else {
+            match ch {
+                '\'' | '"' => quote = Some(ch),
+                '[' | '(' => depth += 1,
+                ']' | ')' => depth = depth.saturating_sub(1),
+                '!' | '&' | '|' => operators += 1,
+                _ => {}
+            }
+            if depth > 128 || operators > 512 {
+                return Err("JSONPath complexity limit exceeded".into());
+            }
+        }
+    }
+    Ok(())
 }

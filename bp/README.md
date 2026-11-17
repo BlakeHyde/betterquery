@@ -107,7 +107,11 @@ spellings may change. See [`json/README.md`](json/README.md).
 The current document parser accepts JSON. YAML decoding is not part of the
 JSON document parser described in the code structure. Parsing and serialization
 limit document nesting to 128 levels. Execution rejects results beyond that
-limit and restores the original document.
+limit and restores the original document. Queries are limited to 64 KiB,
+128 nested delimiters, and 512 logical-operator characters. These bounds are
+checked before recursive validation. The standard `match` and `search` functions
+validate I-Regexp (RFC 9485) syntax and use the Unicode-aware Rust regex engine,
+including its compilation resource limits.
 
 ## Development
 

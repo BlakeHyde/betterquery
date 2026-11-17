@@ -1,6 +1,7 @@
 //! RFC 9535 selection over the ordered, exact-number IR.
 //! Results are de-duplicated and returned in document depth-first order.
 mod expression;
+mod iregexp;
 mod syntax;
 
 use bp_common::{Document, ExecutionError, Node, NodeId, NodeKind, Path, Value};
@@ -13,6 +14,11 @@ pub struct Match {
     /// Absolute path at the instant the query was evaluated.
     pub path: Path,
     pub value: Value,
+}
+
+/// Validate query syntax and function types, enforcing the evaluator's limits.
+pub fn validate(source: &str) -> Result<(), String> {
+    syntax::parse(source).map(|_| ())
 }
 
 /// `$` refers to the subtree at `base`. Missing bases are errors; no matches is valid.

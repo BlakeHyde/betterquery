@@ -193,7 +193,7 @@ impl Parser<'_> {
                 self.ws();
                 let query_start = self.pos;
                 let query = self.string()?;
-                serde_json_path::JsonPath::parse(&query)
+                bp_json_path::validate(&query)
                     .map_err(|e| self.error(query_start, format!("invalid JSONPath: {e}")))?;
                 let body = Box::new(self.form(depth + 1)?);
                 FormKind::Query { query, body }

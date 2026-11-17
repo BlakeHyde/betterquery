@@ -48,6 +48,10 @@ fn execute(document: &mut Document, base: &[String], patch: &Patch) -> Result<()
         Patch::Move { path, from } => {
             let path = resolve(base, path)?;
             let from = resolve(base, from)?;
+            if path == from {
+                document.at(&from).ok_or_else(|| missing(&from))?;
+                return Ok(());
+            }
             if path.len() > from.len() && path.starts_with(&from) {
                 return Err(ExecutionError::new(
                     "cannot move a node into its descendant",

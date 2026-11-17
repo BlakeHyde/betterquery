@@ -90,3 +90,16 @@ fn move_keeps_identity_copy_and_replace_do_not() {
     assert_eq!(doc.at(&["b".into()]).unwrap().id, id);
     assert_ne!(doc.at(&["c".into()]).unwrap().id, id);
 }
+
+#[test]
+fn moving_to_same_location_preserves_order_and_identity() {
+    let mut doc = Document::new(parse(r#"{"a":1,"b":2}"#).unwrap());
+    let before = doc.clone();
+    let FormKind::Patch(patch) =
+        &bp_parser::parse(r#"(patch move (from "/a") (path "/a"))"#).unwrap()[0].kind
+    else {
+        panic!()
+    };
+    bp_json_patch::apply(&mut doc, patch).unwrap();
+    assert_eq!(doc, before);
+}

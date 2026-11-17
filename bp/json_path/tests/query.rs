@@ -135,3 +135,25 @@ fn count_retains_duplicate_nodes_inside_filters() {
         query(&doc, "$[*]").unwrap()
     );
 }
+
+#[test]
+fn query_limits_are_checked_before_recursive_validation() {
+    let query = format!("$[?{}@.a{}]", "(".repeat(1000), ")".repeat(1000));
+    assert!(
+        bp_json_path::validate(&query)
+            .unwrap_err()
+            .contains("complexity")
+    );
+    let query = format!("$[?{}]", vec!["@.a"; 1000].join(" || "));
+    assert!(
+        bp_json_path::validate(&query)
+            .unwrap_err()
+            .contains("complexity")
+    );
+    let key = "a".repeat(65536);
+    assert!(
+        bp_json_path::validate(&format!("$.{key}"))
+            .unwrap_err()
+            .contains("64 KiB")
+    );
+}

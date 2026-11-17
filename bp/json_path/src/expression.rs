@@ -84,12 +84,8 @@ fn eval<'a>(expr: &Expr, current: &'a Node, root: &'a Node) -> ResultValue<'a> {
                 "value" => R::Value(args[0].value()),
                 "match" | "search" => R::Logical(match (args[0].value(), args[1].value()) {
                     (Some(Value::String(text)), Some(Value::String(pattern))) => {
-                        let pattern = if name == "match" {
-                            format!("\\A(?:{pattern})\\z")
-                        } else {
-                            pattern
-                        };
-                        regex::Regex::new(&pattern).is_ok_and(|regex| regex.is_match(&text))
+                        crate::iregexp::compile(&pattern, name == "match")
+                            .is_some_and(|regex| regex.is_match(&text))
                     }
                     _ => false,
                 }),

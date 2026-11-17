@@ -28,7 +28,6 @@ name = "bp-common"
 version = "0.1.0"
 dependencies = [
  "num-bigint",
- "serde_json",
 ]
 
 [[package]]
@@ -82,8 +81,8 @@ version = "0.1.0"
 dependencies = [
  "bp-common",
  "bp-json",
+ "bp-json-path",
  "serde_json",
- "serde_json_path",
 ]
 
 [[package]]
