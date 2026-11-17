@@ -121,6 +121,15 @@ cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
+From the repository root, the Nix flake provides the same toolchain and a
+tested `bp-web` package:
+
+```sh
+nix develop
+nix build
+nix run
+```
+
 The tests cover parser and JSON round trips, patch semantics and rollback,
 RFC 7396 Appendix A, JSONPath selectors and standard functions, exact numbers,
 query snapshot ordering and identities, nested execution, timeline snapshots,
