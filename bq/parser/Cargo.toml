@@ -1,0 +1,13 @@
+[package]
+name = "bq-parser"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+bq-common = { path = "../common" }
+serde_json = "1"
+bq-json-path = { path = "../json_path" }
+
+[dev-dependencies]
+bq-json = { path = "../json" }

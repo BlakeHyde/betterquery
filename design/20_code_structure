@@ -1,9 +1,9 @@
-The project is structured as a cargo workspace under /bp with several
+The project is structured as a cargo workspace under /bq with several
 interrelated crates.
 
 'common' includes shared types and intermediate representations.
 
-'parser' parses the bp language to its intermediate representation.
+'parser' parses the bq language to its intermediate representation.
 
 'document_parser' parses a JSON document to its intermediate
 representation.

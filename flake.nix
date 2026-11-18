@@ -19,7 +19,7 @@
       packages = forEachSystem (
         _system: pkgs:
         let
-          cargoRoot = "bp";
+          cargoRoot = "bq";
         in
         {
           default = pkgs.rustPlatform.buildRustPackage {
@@ -28,16 +28,16 @@
 
             src = ./.;
 
-            # The Cargo workspace lives in bp/, not the repository root.
+            # The Cargo workspace lives in bq/, not the repository root.
             inherit cargoRoot;
             buildAndTestSubdir = cargoRoot;
-            cargoLock.lockFile = ./bp/Cargo.lock;
+            cargoLock.lockFile = ./bq/Cargo.lock;
 
             meta = {
               description = "S-expression query and transformation language for ordered JSON";
               homepage = "https://github.com/BlakeHyde/betterquery";
               license = pkgs.lib.licenses.gpl3Only;
-              mainProgram = "bp-web";
+              mainProgram = "bq-web";
             };
           };
         }
